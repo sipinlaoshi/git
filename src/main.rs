@@ -41,6 +41,13 @@ enum Commands {
         #[arg(short)]
         message: String,
     },
+
+    Clone {
+        ///repository url
+        repo: String,
+        ///directory
+        dir: Option<String>,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -73,5 +80,7 @@ fn main() -> anyhow::Result<()> {
         } => commands::commit_tree::invoke(parent, message, tree_hash),
 
         Commands::Commit { message } => commands::commit::invoke(message),
+
+        Commands::Clone { repo, dir } => commands::clone::invoke(repo, dir),
     }
 }
