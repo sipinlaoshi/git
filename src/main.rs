@@ -29,6 +29,7 @@ enum Commands {
         name_only: bool,
         tree_hash: String,
     },
+    WriteTree,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -51,5 +52,7 @@ fn main() -> anyhow::Result<()> {
             name_only,
             tree_hash,
         } => commands::ls_tree::invoke(name_only, &tree_hash),
+
+        Commands::WriteTree => commands::write_tree::invoke(),
     }
 }

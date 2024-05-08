@@ -10,7 +10,7 @@ use crate::object::Object;
 pub fn invoke(pretty_print: bool, object: &str) -> anyhow::Result<()> {
     ensure!(pretty_print, "we only support -p");
     let mut buf = Vec::new();
-    let obj = Object::read_object(object).context("read object")?;
+    let obj = Object::read(object).context("read object")?;
 
     buf.reserve(obj.size);
     buf.resize(obj.size, 0);

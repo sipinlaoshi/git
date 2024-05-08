@@ -2,6 +2,10 @@ use anyhow::bail;
 use anyhow::Context;
 use anyhow::Ok;
 use flate2::read::ZlibDecoder;
+use flate2::write::ZlibEncoder;
+use flate2::Compression;
+use sha1::Digest;
+use sha1::Sha1;
 use std::ffi::CStr;
 use std::fs;
 use std::io::prelude::*;
@@ -43,7 +47,7 @@ pub(crate) struct Object<R> {
 }
 
 impl Object<()> {
-    pub fn read_object(object: &str) -> anyhow::Result<Object<impl BufRead>> {
+    pub fn read(object: &str) -> anyhow::Result<Object<impl BufRead>> {
         let path = format!(".git/objects/{}/{}", &object[..2], &object[2..]);
         let file = fs::File::open(path).context("open {path} fail")?;
         let zlib = ZlibDecoder::new(file);
@@ -67,5 +71,54 @@ impl Object<()> {
             size,
             reader: zlib,
         })
+    }
+}
+
+struct HashWriter<W> {
+    hasher: Sha1,
+    writer: W,
+}
+
+impl<W: Write> Write for HashWriter<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        let n = self.writer.write(buf)?;
+        self.hasher.update(&buf[..n]);
+        std::result::Result::Ok(n)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        self.writer.flush()
+    }
+}
+
+impl<R: Read> Object<R> {
+    pub fn write(&mut self, writer: impl Write) -> anyhow::Result<[u8; 20]> {
+        let e = ZlibEncoder::new(writer, Compression::default());
+        let mut hash_writer = HashWriter {
+            hasher: Sha1::new(),
+            writer: e,
+        };
+        write!(hash_writer, "{} {}\0", self.kind.to_string(), self.size)
+            .context("write kind&&size")?;
+        std::io::copy(&mut self.reader, &mut hash_writer).context("write content")?;
+        hash_writer.flush().context("flush")?;
+        let hash = hash_writer.hasher.finalize();
+        Ok(hash.into())
+    }
+
+    pub fn write_to_objects(&mut self) -> anyhow::Result<[u8; 20]> {
+        let tmp_path = "temp";
+        let tmp_file =
+            std::fs::File::create(tmp_path).context("create temp file for write object")?;
+        let hash = self.write(&tmp_file).context("write to temp file")?;
+        let encode_hash = hex::encode(hash);
+        std::fs::create_dir_all(format!(".git/objects/{}/", &encode_hash[..2]))
+            .context("create dir")?;
+        std::fs::rename(
+            tmp_path,
+            format!(".git/objects/{}/{}", &encode_hash[..2], &encode_hash[2..]),
+        )
+        .context("move temp file to real object file")?;
+        Ok(hash)
     }
 }

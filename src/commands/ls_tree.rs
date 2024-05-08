@@ -3,8 +3,7 @@ use anyhow::{Context, Ok};
 use std::io::{BufRead, Read};
 
 pub fn invoke(name_only: bool, tree_hash: &str) -> anyhow::Result<()> {
-    let tree =
-        Object::read_object(tree_hash).with_context(|| format!("read object {tree_hash}"))?;
+    let tree = Object::read(tree_hash).with_context(|| format!("read object {tree_hash}"))?;
     let mut reader = tree.reader;
     let mut buf = Vec::new();
     let mut entry_hash: [u8; 20] = [0; 20];
@@ -29,7 +28,7 @@ pub fn invoke(name_only: bool, tree_hash: &str) -> anyhow::Result<()> {
             println!("{}", name);
         } else {
             let entry_hash = hex::encode(entry_hash);
-            let entry_obj = Object::read_object(&entry_hash).context("read entry object")?;
+            let entry_obj = Object::read(&entry_hash).context("read entry object")?;
             let kind = entry_obj.kind.to_string();
             println!("{:0>6} {} {}    {}", mode, kind, entry_hash, name);
         }
