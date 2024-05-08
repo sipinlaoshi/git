@@ -30,7 +30,7 @@ pub fn invoke(name_only: bool, tree_hash: &str) -> anyhow::Result<()> {
             let entry_hash = hex::encode(entry_hash);
             let entry_obj = Object::read_object(&entry_hash).context("read entry object")?;
             let kind = entry_obj.kind.to_string();
-            println!("{} {} {}    {}", mode, kind, entry_hash, name);
+            println!("{:0>6} {} {}    {}", mode, kind, entry_hash, name);
         }
     }
 
