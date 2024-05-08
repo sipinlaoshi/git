@@ -30,6 +30,13 @@ enum Commands {
         tree_hash: String,
     },
     WriteTree,
+    CommitTree {
+        #[arg(short)]
+        parent: Option<String>,
+        #[arg(short)]
+        message: String,
+        tree_hash: String,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -54,5 +61,11 @@ fn main() -> anyhow::Result<()> {
         } => commands::ls_tree::invoke(name_only, &tree_hash),
 
         Commands::WriteTree => commands::write_tree::invoke(),
+
+        Commands::CommitTree {
+            parent,
+            message,
+            tree_hash,
+        } => commands::commit_tree::invoke(parent, message, tree_hash),
     }
 }
