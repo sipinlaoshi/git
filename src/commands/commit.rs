@@ -21,7 +21,7 @@ pub fn invoke(message: String) -> anyhow::Result<()> {
         commit_tree::commit_tree_for(Some(head_hash), message, hex::encode(tree_hash))
             .context("commit tree")?;
     let commit_hash = hex::encode(commit_hash);
-    fs::write(&head_path, hex::encode(&commit_hash))
+    fs::write(&head_path, &commit_hash)
         .with_context(|| format!("write commit hash to {head_path}"))?;
     println!("HEAD is now at {commit_hash}");
     Ok(())
