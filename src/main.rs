@@ -37,6 +37,10 @@ enum Commands {
         message: String,
         tree_hash: String,
     },
+    Commit {
+        #[arg(short)]
+        message: String,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -67,5 +71,7 @@ fn main() -> anyhow::Result<()> {
             message,
             tree_hash,
         } => commands::commit_tree::invoke(parent, message, tree_hash),
+
+        Commands::Commit { message } => commands::commit::invoke(message),
     }
 }

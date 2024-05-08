@@ -8,7 +8,7 @@ use anyhow::{Context, Ok};
 
 use crate::object::{Kind, Object};
 
-fn write_tree_for(path: &Path) -> anyhow::Result<Option<[u8; 20]>> {
+pub fn write_tree_for(path: &Path) -> anyhow::Result<Option<[u8; 20]>> {
     let dir_entries =
         std::fs::read_dir(path).with_context(|| format!("read directory {}", path.display()))?;
     let mut entries = Vec::new();
